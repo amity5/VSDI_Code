@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "vsdi-analysis"
+version = "0.1.0"
+description = "Modular VSDI analysis pipeline for ROI-based timecourses, patterns, and downstream analyses."
+authors = [{ name = "Amit Yelin" }]
+readme = "README.md"
+requires-python = ">=3.9"
+
+dependencies = [
+    "numpy",
+    "pandas",
+    "scipy",
+    "matplotlib",
+    "tqdm",
+    "openpyxl",
+]
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]

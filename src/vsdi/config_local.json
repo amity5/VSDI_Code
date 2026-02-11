@@ -1,0 +1,32 @@
+{
+  "excel_path": "C:/Users/amity/Desktop/Learning/university/Msc/Vision Lab/VSDI/Used_Sessions_details.xlsx",
+  "data_root": "C:/Users/amity/Desktop/Learning/university/Msc/Vision Lab/VSDI/preprocessed_VSDdata",
+  "output_root": "C:/Users/amity/Desktop/Learning/university/Msc/Vision Lab/VSDI/outputs",
+
+  "sheet_name": "Sheet1",
+
+  "frame_rate_hz": 100.0,
+  "stim_onset_frame_1idx": 27,
+  "stim_duration_ms": 300,
+
+  "time_window_ms": [0, 500],
+  "baseline_frames": [25, 27],
+  "dff_mode": "none",
+
+  "roi_shape": "circle",
+  "radius_px": 10,
+
+  "seed_xy": null,
+
+  "auto_seed": true,
+  "auto_seed_method": "peak",
+  "auto_seed_box_hw": [10, 10],
+  "auto_seed_contrast_pct": 100,
+  "auto_seed_time_ms": [0, 300],
+
+  "display_rotate_k": 0,
+  "display_flip_lr": false,
+
+  "save_npz": true,
+  "save_figures": true
+}

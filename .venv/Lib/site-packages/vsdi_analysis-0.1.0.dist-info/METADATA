@@ -1,0 +1,176 @@
+Metadata-Version: 2.4
+Name: vsdi-analysis
+Version: 0.1.0
+Summary: Modular VSDI analysis pipeline for ROI-based timecourses, patterns, and downstream analyses.
+Author: Amit Yelin
+Requires-Python: >=3.9
+Description-Content-Type: text/markdown
+Requires-Dist: numpy
+Requires-Dist: pandas
+Requires-Dist: scipy
+Requires-Dist: matplotlib
+Requires-Dist: tqdm
+Requires-Dist: openpyxl
+
+# VSDI Analysis Pipeline
+
+Modular, object-oriented VSDI analysis pipeline.
+
+This project replaces notebook-based workflows with a structured Python package
+that supports:
+
+- Session indexing from Excel
+- MAT file condition loading
+- ROI-based timecourse extraction
+- Pattern vector computation
+- Reproducible run folders with config hashing
+- Downstream analyses (CRF, similarity, day maps)
+
+---
+
+## Project Structure
+
+
+```
+vsdi_analysis/
+├── pyproject.toml                 # Project metadata and dependencies
+├── README.md                      # Project documentation
+
+├── src/vsdi/                      # Core VSDI analysis package
+│   ├── __init__.py
+│   ├── config.py                  # Global VSDIConfig dataclass (all parameters live here)
+│   ├── paths.py                   # Path utilities and run-folder management
+│   │
+│   ├── io/                        # Data input layer
+│   │   ├── __init__.py
+│   │   ├── excel_sessions.py      # Parse session Excel → SessionSpec objects
+│   │   └── mat_reader.py          # Load .mat files and condition arrays
+│   │
+│   ├── core/                      # Pure computation (no plotting, no side-effects)
+│   │   ├── __init__.py
+│   │   ├── dff.py                 # ΔF/F preprocessing and blank correction
+│   │   ├── roi_masks.py           # Circular and box ROI mask builders
+│   │   ├── roi_selection.py       # Manual and auto-seed selection logic
+│   │   ├── time_axis.py           # Frame → millisecond conversion utilities
+│   │   ├── features.py            # ROI timecourses and spatial pattern extraction
+│   │   ├── manifest.py            # manifest_sessions_sorted.csv + trial tables
+│   │   └── run_folder.py          # Config hashing + reproducible output folders
+│   │
+│   ├── analyses/                  # Downstream analyses (consume saved outputs)
+│   │   ├── __init__.py
+│   │   ├── day_maps.py            # Per-day activation maps (FOV + ROI)
+│   │   ├── crf.py                 # Contrast Response Function fitting
+│   │   └── similarity.py          # Pattern similarity matrices and tables
+│   │
+│   ├── viz/                       # Visualization layer only
+│   │   ├── __init__.py
+│   │   ├── overlays.py            # ROI timecourse overlays across sessions
+│   │   ├── maps.py                # Spatial maps and seed visualization
+│   │   └── heatmaps.py            # Correlation and similarity heatmaps
+│   │
+│   └── cli/                       # Command-line entry points (replace notebooks)
+│       ├── __init__.py
+│       ├── run_overlays.py        # Main overlay pipeline
+│       ├── run_daymaps.py         # Day-level map analysis
+│       ├── run_crf.py             # CRF fitting pipeline
+│       └── run_similarity.py      # Similarity analysis pipeline
+│
+└── tests/                         # Unit tests (ROI, time axis, Excel parsing, etc.)
+
+```
+
+---
+
+## Data Assumptions
+
+The code assumes MATLAB `.mat` files with the following structure:
+
+- `condsAN.mat` containing:
+  - `blankAN`
+  - `condAN*` (e.g. `condAN3`, `condAN4`, …)
+
+Each condition array is expected to be either:
+- `(P, F, T)` — pixels × frames × trials, or
+- `(P, F)` — already averaged across trials
+
+Pixels are assumed to be flattened in **Fortran order**, corresponding to a 2D image shape (default: `100 × 100`).
+
+---
+
+## Installation
+
+From the repository root:
+
+```bash
+pip install -e .
+```
+
+Dependencies include:
+numpy
+scipy
+pandas
+
+
+## Scripts (Main Entry Points)
+1. Per-session QC and activation maps
+
+Generates frame snapshots for each condition.
+
+python scripts/run_session_qc.py \
+  --mat path/to/condsAN.mat \
+  --out path/to/output/plots \
+  --frames 20,30,40,50 \
+  --dff-mode raw
+
+
+  Outputs:
+
+PNG images per condition for quick visual inspection
+
+2. Trial file counting
+
+Counts regular and noisy trial files per condition in a session directory.
+
+python scripts/run_counts.py \
+  --session-dir path/to/session_folder \
+  --conds-mat path/to/condsAN.mat \
+  --out counts.csv
+
+
+Outputs:
+
+CSV summary of trial counts per condition
+
+
+3. ROI timecourses and CRF fitting
+
+Extracts ROI-averaged timecourses and fits a Naka–Rushton contrast–response function.
+
+python scripts/run_crf.py \
+  --mat path/to/condsAN.mat \
+  --out path/to/output/crf \
+  --seed 45,45 \
+  --radius 10 \
+  --cond-map "10:condAN3,16:condAN4,32:condAN5,64:condAN6,100:condAN7" \
+  --dff-mode raw \
+  --resp-window-ms 100,200
+
+
+Outputs:
+
+ROI timecourse plot
+
+CRF fit plot
+
+.npz file containing responses and fit parameters
+
+## Notes and Scope
+
+ROI selection is manual (fixed seed and radius)
+
+No cross-day spatial alignment is performed in the current pipeline
+
+The code is intended for QC, exploratory analysis, and within-session comparisons
+
+Alignment across days and vascular-based registration are intentionally out of scope for this version
+
